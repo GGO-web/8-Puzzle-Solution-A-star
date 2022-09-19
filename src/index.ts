@@ -31,6 +31,13 @@ const manhattanHueristic = (node: Node, finalState: IState) => {
             const distance: number =
                Math.abs(cordsForFs[0] - cordsForIs[0]) +
                Math.abs(cordsForFs[1] - cordsForIs[1]);
+
+            // console.log(
+            //    `d(${nodeState[i][j]}) = |${cordsForIs[1]} - ${
+            //       cordsForFs[1]
+            //    }| + |${2 - cordsForIs[0]} - ${2 - cordsForFs[0]}| = ${distance}`
+            // );
+
             totalDistance += 1 + distance;
          }
       }
@@ -108,10 +115,8 @@ const AStar = function (
 
       let minimumCost = Infinity;
       for (let levelNode of newLevelNodes) {
-         minimumCost = Math.min(
-            minimumCost,
-            manhattanHueristic(levelNode, final)
-         );
+         const currentCost = manhattanHueristic(levelNode, final);
+         minimumCost = Math.min(minimumCost, currentCost);
       }
 
       for (let levelNode of newLevelNodes) {
@@ -127,8 +132,17 @@ const AStar = function (
          db.set((levelNode.getState() as IState).toString(), true);
       }
 
-      levelNodes = newLevelNodes;
+      levelNodes = newLevelNodes.filter(
+         (levelNode) => levelNode.cost === minimumCost
+      );
    }
+
+   console.log("Last state of program execution: ");
+
+   displayBoard(
+      states[states.length - 1].state,
+      states[states.length - 1].index
+   );
 
    return states;
 };
@@ -261,6 +275,7 @@ const findResults = () => {
    const queue = [new Node(initial, null, null, 1, 0)];
 
    allStates = AStar(final, [{ state: initial, index: 1 }], db, queue);
+
    unlockButtons();
 };
 
