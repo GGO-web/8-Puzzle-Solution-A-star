@@ -24,14 +24,14 @@ const manhattanHueristic = (node: Node, finalState: IState) => {
    let totalDistance = 0;
    for (let i = 0; i < nodeState.length; ++i) {
       for (let j = 0; j < nodeState[i].length; ++j) {
-         if (nodeState[i][j] !== finalState[i][j]) {
+         if (nodeState[i][j] !== finalState[i][j] && nodeState[i][j]) {
             let cordsForIs = twoDIndexOf(nodeState, nodeState[i][j]);
             let cordsForFs = twoDIndexOf(finalState, nodeState[i][j]);
 
             const distance: number =
                Math.abs(cordsForFs[0] - cordsForIs[0]) +
                Math.abs(cordsForFs[1] - cordsForIs[1]);
-            totalDistance += distance;
+            totalDistance += 1 + distance;
          }
       }
    }
@@ -108,7 +108,10 @@ const AStar = function (
 
       let minimumCost = Infinity;
       for (let levelNode of newLevelNodes) {
-         minimumCost = manhattanHueristic(levelNode, final);
+         minimumCost = Math.min(
+            minimumCost,
+            manhattanHueristic(levelNode, final)
+         );
       }
 
       for (let levelNode of newLevelNodes) {
