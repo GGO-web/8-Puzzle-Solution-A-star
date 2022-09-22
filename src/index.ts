@@ -9,6 +9,8 @@ import {
 } from "./helpers";
 import { Node } from "./node";
 
+import { PriorityQueue } from "@datastructures-js/priority-queue";
+
 let results: IResult = CLEAN_RESULT;
 
 const twoDIndexOf = function (state: IState, element: any): number[] {
@@ -53,88 +55,75 @@ const AStar = function (
    db: Map<string, boolean>,
    queue: Node[]
 ) {
-   let levelNodes = [queue.shift() as Node];
+   const nodes = new PriorityQueue<Node>((a, b) => a.cost - b.cost);
+   nodes.enqueue(queue.shift() as Node);
 
-   while (levelNodes.length > 0) {
-      const newLevelNodes: Node[] = [];
+   while (nodes.size() > 0) {
+      const currentNode: Node = nodes.dequeue() as Node;
 
-      for (let levelNode of levelNodes) {
-         results = {
-            ...results,
-            currentState: levelNode,
-            settled: db.size,
-            depth: levelNode.getDepth(),
-            haveSolution: false,
+      results = {
+         ...results,
+         currentState: currentNode,
+         settled: db.size,
+         depth: currentNode.getDepth(),
+         haveSolution: false,
+      };
+
+      if (statesAreEqual(currentNode.getState(), final)) {
+         results.haveSolution = true;
+         return states;
+      }
+
+      const emptyCell = getEmpyCellCoords(currentNode.getState());
+
+      directions.forEach((direction) => {
+         const copyState: IState | null = currentNode
+            ?.getState()
+            ?.map((row) => [...row]) as IState;
+
+         // coords cell to switch
+         const coords: ICoordinate = {
+            x: emptyCell.x + direction.x,
+            y: emptyCell.y + direction.y,
+            name: direction.name,
          };
 
-         if (statesAreEqual(levelNode.getState(), final)) {
-            results.haveSolution = true;
-            return states;
-         }
+         // if coords of swapped cell is not out the border of the field
+         if (!isOutOfBorder(coords)) {
+            // move empty cell into current direction
+            [
+               copyState[emptyCell.x][emptyCell.y],
+               copyState[coords.x][coords.y],
+            ] = [
+               copyState[coords.x][coords.y],
+               copyState[emptyCell.x][emptyCell.y],
+            ];
 
-         const emptyCell = getEmpyCellCoords(levelNode.getState());
-
-         directions.forEach((direction) => {
-            const copyState: IState | null = levelNode
-               ?.getState()
-               ?.map((row) => [...row]) as IState;
-
-            // coords cell to switch
-            const coords: ICoordinate = {
-               x: emptyCell.x + direction.x,
-               y: emptyCell.y + direction.y,
-               name: direction.name,
-            };
-
-            // if coords of swapped cell is not out the border of the field
-            if (!isOutOfBorder(coords)) {
-               // move empty cell into current direction
-               [
-                  copyState[emptyCell.x][emptyCell.y],
-                  copyState[coords.x][coords.y],
-               ] = [
-                  copyState[coords.x][coords.y],
-                  copyState[emptyCell.x][emptyCell.y],
-               ];
-
-               // if swapped state is not present in database
-               if (!db.get(copyState.toString())) {
-                  newLevelNodes.push(
-                     new Node(
-                        copyState,
-                        levelNode,
-                        direction.name,
-                        levelNode!.getDepth() + 1,
-                        Infinity
-                     ) as Node
-                  );
-               }
-            }
-         });
-      }
-
-      let minimumCost = Infinity;
-      for (let levelNode of newLevelNodes) {
-         const currentCost = manhattanHueristic(levelNode, final);
-         minimumCost = Math.min(minimumCost, currentCost);
-      }
-
-      for (let levelNode of newLevelNodes) {
-         if (levelNode.cost === minimumCost) {
             results.moves++;
-            states.push({
-               state: levelNode.getState() as IState,
-               index: results.moves + 1,
-            });
-         } else {
-            results.dropped++;
-         }
-         db.set((levelNode.getState() as IState).toString(), true);
-      }
 
-      levelNodes = newLevelNodes.filter(
-         (levelNode) => levelNode.cost === minimumCost
-      );
+            // if swapped state is not present in database
+            if (!db.get(copyState.toString())) {
+               nodes.enqueue(
+                  new Node(
+                     copyState,
+                     currentNode,
+                     direction.name,
+                     currentNode!.getDepth() + 1,
+                     manhattanHueristic(currentNode, final)
+                  ) as Node
+               );
+
+               states.push({
+                  state: copyState,
+                  index: results.moves + 1,
+               });
+
+               db.set(copyState.toString(), true);
+            } else {
+               results.dropped++;
+            }
+         }
+      });
    }
 
    console.log("Last state of program execution: ");
