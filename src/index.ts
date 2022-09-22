@@ -103,15 +103,17 @@ const AStar = function (
 
             // if swapped state is not present in database
             if (!db.get(copyState.toString())) {
-               nodes.enqueue(
-                  new Node(
-                     copyState,
-                     currentNode,
-                     direction.name,
-                     currentNode!.getDepth() + 1,
-                     manhattanHueristic(currentNode, final)
-                  ) as Node
-               );
+               const newNode = new Node(
+                  copyState,
+                  currentNode,
+                  direction.name,
+                  currentNode!.getDepth() + 1,
+                  Infinity
+               ) as Node;
+
+               manhattanHueristic(newNode, final);
+
+               nodes.enqueue(newNode);
 
                states.push({
                   state: copyState,

@@ -5,3 +5,20 @@
  * Licensed under the MIT license
  * Version: 5.0.7
  */
+
+/**
+ * @copyright 2020 Eyas Ranjous <eyas.ranjous@gmail.com>
+ * @license MIT
+ */
+
+/**
+ * @license MIT
+ * @copyright 2020 Eyas Ranjous <eyas.ranjous@gmail.com>
+ *
+ * @class
+ */
+
+/**
+ * @license MIT
+ * @copyright 2020 Eyas Ranjous <eyas.ranjous@gmail.com>
+ */
